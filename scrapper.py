@@ -1,5 +1,9 @@
-import requests, time
+import requests, time, json
+from fundo import Fundo
+from detalhe import Detalhe
 from bs4 import BeautifulSoup
+
+#AWS LAMBDA
 
 # def lambda_handler(event, context):
 #     r = requests.get("https://ifconfig.me")
@@ -24,32 +28,40 @@ def obtem_fundos():
             admin = admin_el.text.strip()
             symbol = fii.find("span", class_="symbol").text.strip()
             name = fii.find("span", class_="name").text.strip()
-            
-            print(symbol + " | " + admin + " | " + name)
-            detalhe_fundo(symbol)
 
-            time.sleep(0.5)
-    
+            fundo = Fundo(symbol, admin, name)
+
+            #Busca detalhes do fundo
+            detalhe_fundo(fundo)
+
+            
+
+            print(json.dumps(fundo.toJson(), ensure_ascii=False))
+
+            #TODO: Enviar para o webservice
+
+            time.sleep(1)
+            break
 
 def detalhe_fundo(fundo):
-    pagina_detalhe = requests.get(URL_BASE + "/" + fundo)
+    pagina_detalhe = requests.get(URL_BASE + "/" + fundo.symbol)
     soup = BeautifulSoup(pagina_detalhe.content, 'html.parser')
     liquidez_diaria = soup.find_all("span", class_="indicator-value")[0].get_text(strip=True)
     ultimo_rendimento = soup.find_all("span", class_="indicator-value")[1].get_text(strip=True)
     
-    dividend_yield = soup.find_all("span", class_="indicator-value")[2].get_text(strip=True)
+    dy = soup.find_all("span", class_="indicator-value")[2].get_text(strip=True)
     patrimonio_liquido = soup.find_all("span", class_="indicator-value")[3].get_text(strip=True)
     valor_patrimonal = soup.find_all("span", class_="indicator-value")[4].get_text(strip=True)
     rentabilidade_mes = soup.find_all("span", class_="indicator-value")[5].get_text(strip=True)
-    pvp = soup.find_all("span", class_="indicator-value")[6].get_text(strip=True)
-    
-    print('\tLiquidez: ' + liquidez_diaria)
-    print('\tRendimento: ' + ultimo_rendimento)
-    print('\tDY: ' + dividend_yield)
-    print('\tPatrimônio Liquido: ' + patrimonio_liquido)
-    print('\tValor Patrimonial: ' + valor_patrimonal)
-    print('\tRentabilidade/Mês: ' + rentabilidade_mes)
-    print('\tP/VP: ' + pvp)
+    #pvp = soup.find_all("span", class_="indicator-value")[6].get_text(strip=True)
 
-#detalhe_fundo("ABCP11")
+    detalhe = Detalhe(liquidez_diaria,
+                      ultimo_rendimento, 
+                      dy, 
+                      patrimonio_liquido,
+                      valor_patrimonal,
+                      rentabilidade_mes)
+    
+    fundo.detalhe = detalhe
+
 obtem_fundos()

@@ -1,0 +1,6 @@
+__pycache__/
+data-postgre/
+*.py[cod]
+flask-virtualenv/
+.vscode/
+*.log
