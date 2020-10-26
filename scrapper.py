@@ -41,13 +41,6 @@ def obtem_fundos():
             detalhe_fundo(fundo)
 
             enviar_webservice(fundo.toJson())
-            
-            # if symbol == 'AFCR11':
-            #     enviar_webservice(fundo.toJson())
-            #     break
-
-            
-            #break
 
 def detalhe_fundo(fundo):
     pagina_detalhe = requests.get(URL_BASE + "/" + fundo.symbol)
@@ -68,8 +61,7 @@ def detalhe_fundo(fundo):
     dy = dy.replace('%', '').replace(',', '.') if dy != "N/A" else None
     patrimonio_liquido = tratar_patrimonio_liquido(patrimonio_liquido.replace('R$ ', '').replace(',', '.')) if patrimonio_liquido != "N/A" else None
     
-    ##TODO: CORRIGIR VALOR PATRIMONIAL, QUANDO PASSA DE 1000, DA PROBLEMA
-    valor_patrimonal = valor_patrimonal.replace('R$ ', '').replace(',', '.') if valor_patrimonal != "N/A" else None
+    valor_patrimonal = valor_patrimonal.replace('R$ ', '').replace('.', '',).replace(',', '.') if valor_patrimonal != "N/A" else None
     rentabilidade_mes = rentabilidade_mes.replace('%', '').replace(',', '.') if rentabilidade_mes != "N/A" else None
 
     detalhe = Detalhe(liquidez_diaria,
@@ -103,19 +95,14 @@ def tratar_patrimonio_liquido(pl):
         #MILHOES
         patrimonio_liquido = float(pl.replace('mi', '').strip())
         patrimonio_liquido = patrimonio_liquido * 1000000
-    else:
+    elif pl.endswith('bi'):
         #BILHOES
         patrimonio_liquido = float(pl.replace('bi', '').strip())
         patrimonio_liquido = patrimonio_liquido * 1000000000
+    else:
+        #MIL
+        patrimonio_liquido = float(patrimonio_liquido)
 
     return patrimonio_liquido
-        
-
 
 obtem_fundos()
-
-#dados = "{\"symbol\": \"AFCR11\", \"admin\": \"CM CAPITAL MARKETS\", \"nome\": \"AF INVEST FDO INV. IMOB. - RECEBÍVEIS IMOB.\", \"detalhe\": {\"liquidez_diaria\": \"2.016\", \"ultimo_rendimento\": \"R$ 0,87\", \"dy\": \"0,82%\", \"patrimonio_liquido\": \"R$ 68 mi\", \"valor_patrimonial\": \"R$ 101,41\", \"rentabilidade_mes\": \"2,26%\"}}"
-
-#fundo = Fundo("AFCR11", "CM CAPITALIZAÇÃO", "IMÓVEIS")
-#print(dados)
-#enviar_webservice(fundo.toJson())
