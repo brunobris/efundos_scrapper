@@ -101,7 +101,7 @@ def tratar_patrimonio_liquido(pl):
         patrimonio_liquido = patrimonio_liquido * 1000000000
     else:
         #MIL
-        patrimonio_liquido = float(patrimonio_liquido)
+        patrimonio_liquido = float(pl.replace('.', ''))
 
     return patrimonio_liquido
 
