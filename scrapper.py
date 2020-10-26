@@ -67,6 +67,8 @@ def detalhe_fundo(fundo):
     ultimo_rendimento = ultimo_rendimento.replace('R$ ', '').replace(',', '.') if ultimo_rendimento != "N/A" else None
     dy = dy.replace('%', '').replace(',', '.') if dy != "N/A" else None
     patrimonio_liquido = tratar_patrimonio_liquido(patrimonio_liquido.replace('R$ ', '').replace(',', '.')) if patrimonio_liquido != "N/A" else None
+    
+    ##TODO: CORRIGIR VALOR PATRIMONIAL, QUANDO PASSA DE 1000, DA PROBLEMA
     valor_patrimonal = valor_patrimonal.replace('R$ ', '').replace(',', '.') if valor_patrimonal != "N/A" else None
     rentabilidade_mes = rentabilidade_mes.replace('%', '').replace(',', '.') if rentabilidade_mes != "N/A" else None
 
