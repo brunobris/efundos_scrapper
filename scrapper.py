@@ -4,10 +4,8 @@ from detalhe import Detalhe
 from bs4 import BeautifulSoup
 
 #AWS LAMBDA
-
-# def lambda_handler(event, context):
-#     r = requests.get("https://ifconfig.me")
-#     print(r.text)
+def lambda_handler(event, context):
+    obtem_fundos()
 
 
 conteudo = """ 
