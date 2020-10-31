@@ -42,15 +42,15 @@ def obtem_fundos():
 
 def detalhe_fundo(fundo):
     pagina_detalhe = requests.get(URL_BASE + "/" + fundo.symbol)
-    soup = BeautifulSoup(pagina_detalhe.content, 'html.parser')
-    liquidez_diaria = soup.find_all("span", class_="indicator-value")[0].get_text(strip=True)
-    ultimo_rendimento = soup.find_all("span", class_="indicator-value")[1].get_text(strip=True)
+    detalheSoup = BeautifulSoup(pagina_detalhe.content, 'html.parser')
+    liquidez_diaria = detalheSoup.find_all("span", class_="indicator-value")[0].get_text(strip=True)
+    ultimo_rendimento = detalheSoup.find_all("span", class_="indicator-value")[1].get_text(strip=True)
     
-    dy = soup.find_all("span", class_="indicator-value")[2].get_text(strip=True)
-    patrimonio_liquido = soup.find_all("span", class_="indicator-value")[3].get_text(strip=True)
-    valor_patrimonal = soup.find_all("span", class_="indicator-value")[4].get_text(strip=True)
-    rentabilidade_mes = soup.find_all("span", class_="indicator-value")[5].get_text(strip=True)
-    #pvp = soup.find_all("span", class_="indicator-value")[6].get_text(strip=True)
+    dy = detalheSoup.find_all("span", class_="indicator-value")[2].get_text(strip=True)
+    patrimonio_liquido = detalheSoup.find_all("span", class_="indicator-value")[3].get_text(strip=True)
+    valor_patrimonal = detalheSoup.find_all("span", class_="indicator-value")[4].get_text(strip=True)
+    rentabilidade_mes = detalheSoup.find_all("span", class_="indicator-value")[5].get_text(strip=True)
+    #pvp = detalheSoup.find_all("span", class_="indicator-value")[6].get_text(strip=True)
 
 
     #Realiza tratamento
@@ -62,15 +62,24 @@ def detalhe_fundo(fundo):
     valor_patrimonal = valor_patrimonal.replace('R$ ', '').replace('.', '',).replace(',', '.') if valor_patrimonal != "N/A" else None
     rentabilidade_mes = rentabilidade_mes.replace('%', '').replace(',', '.') if rentabilidade_mes != "N/A" else None
 
+    #Realiza leitura dos documentos do fundo
+    lista_doc = ler_documentos(detalheSoup)
+
     detalhe = Detalhe(liquidez_diaria,
                       ultimo_rendimento, 
                       dy, 
                       patrimonio_liquido,
                       valor_patrimonal,
-                      rentabilidade_mes)
+                      rentabilidade_mes,
+                      lista_doc)
     
     fundo.detalhe = detalhe
-    time.sleep(0.5)
+    time.sleep(0.2)
+
+def ler_documentos(detalheSoup):
+    lista = detalheSoup.find_all("a", class_="bulletin-text-link")
+    return [{"titulo" : doc.get_text(strip=True), "link" : doc['href']} for doc in lista]
+
 
 def enviar_webservice(dados):
     headers = {
