@@ -78,7 +78,8 @@ def detalhe_fundo(fundo):
 
 def ler_documentos(detalheSoup):
     lista = detalheSoup.find_all("a", class_="bulletin-text-link")
-    return [{"nome" : doc.get_text(strip=True), "link" : doc['href']} for doc in lista]
+    #Importante reverter a lista, para que fique na ordem (id menor = documento mais antigo)
+    return [{"nome" : doc.get_text(strip=True), "link" : doc['href']} for doc in reversed(lista)]
 
 
 def enviar_webservice(dados):
