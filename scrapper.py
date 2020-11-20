@@ -1,8 +1,10 @@
-import requests, time, json
+import requests, time, json, base64
 from fundo import Fundo
 from detalhe import Detalhe
 from bs4 import BeautifulSoup
-
+import re
+#from b3_service import buscar_documentos_do_fundo
+from fnet_service import buscar_documentos_do_fundo
 #AWS LAMBDA
 def lambda_handler(event, context):
     obtem_fundos()
@@ -26,23 +28,54 @@ def obtem_fundos():
     for (indice, fii) in enumerate(lista_fiis):
         print('Fundo ' + str(indice + 1) + ' de ' + str(len(lista_fiis)))
         symbol_el = fii.find("span", class_="symbol")
-        if symbol_el:
-            symbol = symbol_el.text.strip()
-            name = fii.find("span", class_="name").text.strip()
-            admin = fii.find("span", class_="admin").text.strip() if  fii.find("span", class_="admin") else None
+        symbol = symbol_el.text.strip()
+        try:
+            if symbol_el:
+                name = fii.find("span", class_="name").text.strip()
+                admin = fii.find("span", class_="admin").text.strip() if  fii.find("span", class_="admin") else None
 
-            print('Obtendo dados do fundo : ' + symbol)
+                print('Obtendo dados do fundo : ' + symbol)
 
-            fundo = Fundo(symbol, admin, name)
+                fundo = Fundo(symbol, admin, name)
 
-            #Busca detalhes do fundo
-            detalhe_fundo(fundo)
+                #Busca detalhes do fundo
+                detalhe_fundo(fundo)
 
-            enviar_webservice(fundo.toJson())
+
+                print(fundo.toJson())
+                
+                enviar_webservice(fundo.toJson())
+                
+                break
+        except Exception as e:
+            print('### Erro ao buscar detalhes no fundo {}'.format(symbol))
+            print('### Detalhes: {}'.format(e))
+            #break
+            continue
+        finally:
+            time.sleep(0.2)
 
 def detalhe_fundo(fundo):
+    print('Carregando página de detalhe...')
     pagina_detalhe = requests.get(URL_BASE + "/" + fundo.symbol)
     detalheSoup = BeautifulSoup(pagina_detalhe.content, 'html.parser')
+
+    print('Carregado.')
+    # Ler informações do fundo
+    info_basica = detalheSoup.find_all("section", {"id": "basic-infos"})[0]
+    cnpj_fundo = info_basica.find_all("span", class_="description")[8].get_text(strip=True)
+    cnpj_fundo = ''.join(re.findall(r'\d+', cnpj_fundo))
+
+   
+
+    #base64Encoded = base64.b64encode(cnpj_fundo.encode('utf8')) 
+    #print(base64Encoded.decode('utf8'))
+
+    #print(base64.b64decode(base64Encoded).decode('utf8'))
+
+
+
+    # Ler dados
     liquidez_diaria = detalheSoup.find_all("span", class_="indicator-value")[0].get_text(strip=True)
     ultimo_rendimento = detalheSoup.find_all("span", class_="indicator-value")[1].get_text(strip=True)
     
@@ -63,7 +96,7 @@ def detalhe_fundo(fundo):
     rentabilidade_mes = rentabilidade_mes.replace('%', '').replace(',', '.') if rentabilidade_mes != "N/A" else None
 
     #Realiza leitura dos documentos do fundo
-    lista_doc = ler_documentos(detalheSoup)
+    lista_doc = ler_documentos(cnpj_fundo)
 
     detalhe = Detalhe(liquidez_diaria,
                       ultimo_rendimento, 
@@ -74,28 +107,22 @@ def detalhe_fundo(fundo):
                       lista_doc)
     
     fundo.detalhe = detalhe
-    time.sleep(0.2)
 
-def ler_documentos(detalheSoup):
-    lista = detalheSoup.find_all("a", class_="bulletin-text-link")
-    #Importante reverter a lista, para que fique na ordem (id menor = documento mais antigo)
-    return [{"nome" : doc.get_text(strip=True), "link" : doc['href']} for doc in reversed(lista)]
-
+def ler_documentos(cnpj):
+    return buscar_documentos_do_fundo(cnpj)
 
 def enviar_webservice(dados):
+    url = "http://localhost:9092/fundos/atualizar-fundo"
     headers = {
         'Content-Type': 'application/json; charset=UTF-8',
         'Accept': 'application/json',
         'Accept-Charset': 'utf-8'
     }
-    print(dados)
-    r = requests.post("http://localhost:9092/fundos/atualizar-fundo",
-                      json=json.loads(dados),
-                      headers=headers)
+    #print(dados)
+    r = requests.post(url, json=json.loads(dados), headers=headers)
 
     if r.status_code != 200:
-        print(r.status_code)
-        print(r.text)
+        raise Exception('Erro ao realizar request {}'.format(r.status_code))
 
 def tratar_patrimonio_liquido(pl):
     patrimonio_liquido = 0
