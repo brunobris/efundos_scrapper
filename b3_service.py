@@ -1,6 +1,9 @@
-import datetime, json, base64
+import json, base64
 import requests
+from datetime import date, datetime
+from dateutil import parser
 from http_requests import http_get
+from util.date_functions import converter_data
 import urllib3
 
 urllib3.disable_warnings()
@@ -8,8 +11,6 @@ urllib3.disable_warnings()
 B3_BASE_URL = "https://sistemaswebb3-listados.b3.com.br"
 DOCUMENTS_URL = "/fundsProxy/fundsCall/GetListedDocuments"
 DIVIDEND_URL = "/fundsProxy/fundsCall/GetListedSupplementFunds"
-
-now = datetime.datetime.now()
 
 #data_atual_request = now.strftime("%Y-%m-%d")
 #print(data_atual)
@@ -56,13 +57,14 @@ def buscar_dividendos_do_fundo(cnpj, symbol):
     resultado  = json.loads(result.text)
 
     #Filtrar apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
+    #TODO: Inverter ordem?
     return [
                 {
-                    'data_base' : doc['lastDatePrior'],
-                    'data_pagamento' : doc['paymentDate'],
-                    'rendimento' : doc['rate'],
+                    'data_base' : converter_data(doc['lastDatePrior']),
+                    'data_pagamento' : converter_data(doc['paymentDate']),
+                    'rendimento' : f'{float(doc["rate"].replace(".", "").replace(",", ".")):.2f}',
                 } for doc in resultado['cashDividends'] if 'CTF' in doc['isinCode'][6:]
             ]
 
-    
-#buscar_dividendos_do_fundo('18979895000113', 'CPTS')
+
+#print(buscar_dividendos_do_fundo('18979895000113', 'CPTS'))
