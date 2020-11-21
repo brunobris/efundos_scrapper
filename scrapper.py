@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import re
 #from b3_service import buscar_documentos_do_fundo
 from fnet_service import buscar_documentos_do_fundo
+from b3_service import buscar_dividendos_do_fundo
 #AWS LAMBDA
 def lambda_handler(event, context):
     obtem_fundos()
@@ -44,7 +45,7 @@ def obtem_fundos():
 
                 print(fundo.toJson())
                 
-                enviar_webservice(fundo.toJson())
+                #enviar_webservice(fundo.toJson())
                 
                 break
         except Exception as e:
@@ -97,6 +98,9 @@ def detalhe_fundo(fundo):
 
     #Realiza leitura dos documentos do fundo
     lista_doc = ler_documentos(cnpj_fundo)
+    lista_dividendos = ler_dividendos(cnpj_fundo, fundo.symbol[:4])
+
+    #print(lista_dividendos)
 
     detalhe = Detalhe(liquidez_diaria,
                       ultimo_rendimento, 
@@ -104,12 +108,17 @@ def detalhe_fundo(fundo):
                       patrimonio_liquido,
                       valor_patrimonal,
                       rentabilidade_mes,
-                      lista_doc)
+                      lista_doc,
+                      lista_dividendos)
     
     fundo.detalhe = detalhe
 
 def ler_documentos(cnpj):
     return buscar_documentos_do_fundo(cnpj)
+
+def ler_dividendos(cnpj, symbol):
+    return buscar_dividendos_do_fundo(cnpj, symbol)
+
 
 def enviar_webservice(dados):
     url = "http://localhost:9092/fundos/atualizar-fundo"

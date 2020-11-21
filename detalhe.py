@@ -8,7 +8,8 @@ class Detalhe:
         patrimonio_liquido, 
         valor_patrimonial,
         rentabilidade_mes,
-        lista_documentos):
+        lista_documentos,
+        lista_dividendos):
         self.liquidez_diaria = liquidez_diaria
         self.ultimo_rendimento = ultimo_rendimento
         self.dy = dy
@@ -16,6 +17,7 @@ class Detalhe:
         self.valor_patrimonial = valor_patrimonial
         self.rentabilidade_mes = rentabilidade_mes
         self.lista_documentos = lista_documentos
+        self.lista_dividendos = lista_dividendos
 
 
     def toJson(self):

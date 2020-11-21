@@ -16,23 +16,18 @@ def buscar_documentos_do_fundo(cnpj):
     url_request = URL_DOC_FNET + cnpj
 
     print('Obtendo documentos da URL: ' + url_request)
-    try:
-        result = http_get(url_request)
-        if result.status_code != 200:
-            raise Exception('status_code inesperado: {}'.format(result.status_code))
+    result = http_get(url_request)
+    if result.status_code != 200:
+        raise Exception('status_code inesperado ao obter documentos: {}'.format(result.status_code))
 
-        resultado = json.loads(result.text)
-        lista = [
-                    {
-                        'nome' : doc['categoriaDocumento'] + ' - ' + doc['dataReferencia'],
-                        'fnet_id' : str(doc['id']),
-                        'data_referencia' : converter_data(doc['dataReferencia']),
-                        'data_publicacao' : converter_data(doc['dataEntrega'])
-                    } for doc in resultado['data']
-                ]
-
-        return lista
-    except Exception as e:
-        raise Exception("Erro ao obter documentos do fundo CNPJ '{}' : {}".format(cnpj, e))
+    resultado = json.loads(result.text)
+    return [
+                {
+                    'nome' : doc['categoriaDocumento'] + ' - ' + doc['dataReferencia'],
+                    'fnet_id' : str(doc['id']),
+                    'data_referencia' : converter_data(doc['dataReferencia']),
+                    'data_publicacao' : converter_data(doc['dataEntrega'])
+                } for doc in resultado['data']
+            ]
 
 #buscar_documentos_do_fundo('35765826000126')

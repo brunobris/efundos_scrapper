@@ -1,21 +1,19 @@
 import datetime, json, base64
 import requests
+from http_requests import http_get
 import urllib3
 
 urllib3.disable_warnings()
 
 B3_BASE_URL = "https://sistemaswebb3-listados.b3.com.br"
 DOCUMENTS_URL = "/fundsProxy/fundsCall/GetListedDocuments"
+DIVIDEND_URL = "/fundsProxy/fundsCall/GetListedSupplementFunds"
 
 now = datetime.datetime.now()
 
 #data_atual_request = now.strftime("%Y-%m-%d")
 #print(data_atual)
 
-
-
-def get_request(url):
-    return requests.get(url, verify=False)
 
 def buscar_documentos_do_fundo(cnpj):
     #Parametro que será convertido em Base64 para o request
@@ -24,7 +22,7 @@ def buscar_documentos_do_fundo(cnpj):
     parametro_base64 = base64.b64encode(json.dumps(documentos_fundo_param, separators=(',', ':')).encode('utf8'))
     url_request = B3_BASE_URL + DOCUMENTS_URL + "/" + str(parametro_base64.decode('utf8'))
 
-    result = get_request(url_request)
+    result = http_get(url_request)
 
     if result.status_code != 200:
         return []
@@ -44,6 +42,27 @@ def buscar_documentos_do_fundo(cnpj):
 
     return lista
 
+def buscar_dividendos_do_fundo(cnpj, symbol):
+    parametro = {"cnpj":cnpj,"identifierFund":symbol,"typeFund":7}
+    parametro_base64 = base64.b64encode(json.dumps(parametro, separators=(',', ':')).encode('utf8'))
 
+    url_request = B3_BASE_URL + DIVIDEND_URL + "/" + str(parametro_base64.decode('utf8'))
+    
+    print('Obtendo dividendos da URL: ' + url_request)
+    result = http_get(url_request)
+    if result.status_code != 200:
+            raise Exception('status_code inesperado ao obter dividendos: {}'.format(result.status_code))
 
-#buscar_documentos_do_fundo('18979895000113')
+    resultado  = json.loads(result.text)
+
+    #Filtrar apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
+    return [
+                {
+                    'data_base' : doc['lastDatePrior'],
+                    'data_pagamento' : doc['paymentDate'],
+                    'rendimento' : doc['rate'],
+                } for doc in resultado['cashDividends'] if 'CTF' in doc['isinCode'][6:]
+            ]
+
+    
+#buscar_dividendos_do_fundo('18979895000113', 'CPTS')
