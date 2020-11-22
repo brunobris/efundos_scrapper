@@ -43,11 +43,11 @@ def obtem_fundos():
                 detalhe_fundo(fundo)
 
 
-                print(fundo.toJson())
+                #print(fundo.toJson())
                 
-                #enviar_webservice(fundo.toJson())
+                enviar_webservice(fundo.toJson())
                 
-                break
+                #break
         except Exception as e:
             print('### Erro ao buscar detalhes no fundo {}'.format(symbol))
             print('### Detalhes: {}'.format(e))

@@ -20,6 +20,7 @@ def buscar_documentos_do_fundo(cnpj):
 
     resultado = json.loads(result.text)
     #TODO: Inverter ordem?
+    #TODO: Guardar desdobramentos talvez? ver exemplo CXRI em stockDividends em 09/09/2020
     return [
                 {
                     'nome' : doc['categoriaDocumento'] + ' - ' + doc['dataReferencia'],
@@ -30,4 +31,4 @@ def buscar_documentos_do_fundo(cnpj):
             ]
 
 
-#print(buscar_documentos_do_fundo('35765826000126'))
+#print(buscar_documentos_do_fundo('17098794000170'))

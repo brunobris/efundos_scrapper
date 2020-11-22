@@ -54,17 +54,26 @@ def buscar_dividendos_do_fundo(cnpj, symbol):
     if result.status_code != 200:
             raise Exception('status_code inesperado ao obter dividendos: {}'.format(result.status_code))
 
+    if not result.text:
+        return []
+    
     resultado  = json.loads(result.text)
 
     #Filtrar apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
-    #TODO: Inverter ordem?
+    #TODO: Inverter ordem? Talvez apenas para carga inicial
+    #resultado['cashDividends'].sort(key=lambda x: converter_data(x['paymentDate']))
+
     return [
                 {
                     'data_base' : converter_data(doc['lastDatePrior']),
                     'data_pagamento' : converter_data(doc['paymentDate']),
                     'rendimento' : f'{float(doc["rate"].replace(".", "").replace(",", ".")):.2f}',
-                } for doc in resultado['cashDividends'] if 'CTF' in doc['isinCode'][6:]
+                } for doc in resultado['cashDividends'] if 'CTF' in doc['isinCode'][6:] and doc['label'] == 'RENDIMENTO'
             ]
 
 
 #print(buscar_dividendos_do_fundo('18979895000113', 'CPTS'))
+print(buscar_dividendos_do_fundo('17098794000170', 'CXRI'))
+
+
+
