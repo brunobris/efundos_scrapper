@@ -73,7 +73,9 @@ def buscar_dividendos_do_fundo(cnpj, symbol):
 
 
 #print(buscar_dividendos_do_fundo('18979895000113', 'CPTS'))
-print(buscar_dividendos_do_fundo('17098794000170', 'CXRI'))
+#print(buscar_dividendos_do_fundo('17098794000170', 'CXRI'))
+#print(buscar_dividendos_do_fundo('28267696000136', 'YCHY'))
+
 
 
 

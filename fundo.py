@@ -1,10 +1,10 @@
 import json
 
 class Fundo:
-    def __init__(self, symbol, admin, nome, detalhe=None):
+    def __init__(self, symbol, admin, razao_social, detalhe=None):
         self.symbol  = symbol
         self.admin = admin
-        self.nome = nome
+        self.razao_social = razao_social
         self.detalhe = detalhe
 
     def toJson(self):

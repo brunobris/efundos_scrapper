@@ -18,6 +18,9 @@ URL_BASE = "https://www.fundsexplorer.com.br/funds"
 #soup = BeautifulSoup(conteudo, 'html.parser')
 
 
+#def obtem_lista_fundos():
+
+#TODO: Migrar lista para B3?
 def obtem_fundos():
     pagina_lista_fundos = requests.get(URL_BASE)
 
@@ -25,19 +28,18 @@ def obtem_fundos():
     lista_fiis = soup.find_all("div", class_="item")
     print(str(len(lista_fiis)) + ' fundo(s) encontrado(s)')
 
-
     for (indice, fii) in enumerate(lista_fiis):
         print('Fundo ' + str(indice + 1) + ' de ' + str(len(lista_fiis)))
         symbol_el = fii.find("span", class_="symbol")
         symbol = symbol_el.text.strip()
         try:
             if symbol_el:
-                name = fii.find("span", class_="name").text.strip()
+                razao_social = fii.find("span", class_="name").text.strip()
                 admin = fii.find("span", class_="admin").text.strip() if  fii.find("span", class_="admin") else None
 
                 print('Obtendo dados do fundo : ' + symbol)
 
-                fundo = Fundo(symbol, admin, name)
+                fundo = Fundo(symbol, admin, razao_social)
 
                 #Busca detalhes do fundo
                 detalhe_fundo(fundo)
@@ -49,7 +51,7 @@ def obtem_fundos():
                 
                 #break
         except Exception as e:
-            print('### Erro ao buscar detalhes no fundo {}'.format(symbol))
+            print('### Erro no fundo {}'.format(symbol))
             print('### Detalhes: {}'.format(e))
             #break
             continue
@@ -67,14 +69,8 @@ def detalhe_fundo(fundo):
     cnpj_fundo = info_basica.find_all("span", class_="description")[8].get_text(strip=True)
     cnpj_fundo = ''.join(re.findall(r'\d+', cnpj_fundo))
 
-   
-
-    #base64Encoded = base64.b64encode(cnpj_fundo.encode('utf8')) 
-    #print(base64Encoded.decode('utf8'))
-
-    #print(base64.b64decode(base64Encoded).decode('utf8'))
-
-
+    #Grava CNPJ do Fundo:
+    fundo.cnpj = cnpj_fundo
 
     # Ler dados
     liquidez_diaria = detalheSoup.find_all("span", class_="indicator-value")[0].get_text(strip=True)
@@ -101,7 +97,6 @@ def detalhe_fundo(fundo):
     lista_dividendos = ler_dividendos(cnpj_fundo, fundo.symbol[:4])
 
     #print(lista_dividendos)
-
     detalhe = Detalhe(liquidez_diaria,
                       ultimo_rendimento, 
                       dy, 
@@ -131,7 +126,7 @@ def enviar_webservice(dados):
     r = requests.post(url, json=json.loads(dados), headers=headers)
 
     if r.status_code != 200:
-        raise Exception('Erro ao realizar request {}'.format(r.status_code))
+        raise Exception('Erro ao enviar dados do fundo para o server. StatusCode {}'.format(r.status_code))
 
 def tratar_patrimonio_liquido(pl):
     patrimonio_liquido = 0
@@ -150,3 +145,8 @@ def tratar_patrimonio_liquido(pl):
     return patrimonio_liquido
 
 obtem_fundos()
+
+#fundo = Fundo("YCHY11", "", "")
+
+#print(fundo.symbol)
+#detalhe_fundo(fundo)
