@@ -15,7 +15,6 @@ DIVIDEND_URL = "/fundsProxy/fundsCall/GetListedSupplementFunds"
 #data_atual_request = now.strftime("%Y-%m-%d")
 #print(data_atual)
 
-
 def buscar_documentos_do_fundo(cnpj):
     #Parametro que será convertido em Base64 para o request
     #TODO: Utilizar datas (mês anterior e data atual)
@@ -43,13 +42,13 @@ def buscar_documentos_do_fundo(cnpj):
 
     return lista
 
-def buscar_dividendos_do_fundo(cnpj, symbol):
+def buscar_dados_do_fundo(cnpj, symbol):
     parametro = {"cnpj":cnpj,"identifierFund":symbol,"typeFund":7}
     parametro_base64 = base64.b64encode(json.dumps(parametro, separators=(',', ':')).encode('utf8'))
 
     url_request = B3_BASE_URL + DIVIDEND_URL + "/" + str(parametro_base64.decode('utf8'))
     
-    print('Obtendo dividendos da URL: ' + url_request)
+    print('Obtendo eventos da URL: ' + url_request)
     result = http_get(url_request)
     if result.status_code != 200:
             raise Exception('status_code inesperado ao obter dividendos: {}'.format(result.status_code))
@@ -57,19 +56,32 @@ def buscar_dividendos_do_fundo(cnpj, symbol):
     if not result.text:
         return []
     
-    resultado  = json.loads(result.text)
+    return json.loads(result.text)
 
-    #Filtrar apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
+def buscar_dividendos_do_fundo(dados): 
+    #Filtra apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
     #TODO: Inverter ordem? Talvez apenas para carga inicial
     #resultado['cashDividends'].sort(key=lambda x: converter_data(x['paymentDate']))
-
     return [
                 {
                     'data_base' : converter_data(doc['lastDatePrior']),
                     'data_pagamento' : converter_data(doc['paymentDate']),
                     'rendimento' : f'{float(doc["rate"].replace(".", "").replace(",", ".")):.2f}',
-                } for doc in resultado['cashDividends'] if 'CTF' in doc['isinCode'][6:] and doc['label'] == 'RENDIMENTO'
+                } for doc in dados['cashDividends'] if 'CTF' in doc['isinCode'][6:] and doc['label'] == 'RENDIMENTO'
             ]
+
+def buscar_desdobramentos_do_fundo(dados): 
+    #Filtra apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
+    #TODO: Inverter ordem? Talvez apenas para carga inicial
+    #resultado['cashDividends'].sort(key=lambda x: converter_data(x['paymentDate']))
+    return [
+                {
+                    'data_aprovacao' : converter_data(doc['approvedOn']),
+                    'data_inicio' : converter_data(doc['lastDatePrior']),
+                    'fator' : f'{float(doc["factor"].replace(".", "").replace(",", ".")):.2f}',
+                } for doc in dados['stockDividends'] if doc['label'] == 'DESDOBRAMENTO'
+            ]
+
 
 
 #print(buscar_dividendos_do_fundo('18979895000113', 'CPTS'))

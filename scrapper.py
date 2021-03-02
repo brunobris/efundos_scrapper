@@ -2,10 +2,11 @@ import requests, time, json, base64
 from fundo import Fundo
 from detalhe import Detalhe
 from bs4 import BeautifulSoup
+from models.dados_b3 import DadosB3
 import re
 #from b3_service import buscar_documentos_do_fundo
 from fnet_service import buscar_documentos_do_fundo
-from b3_service import buscar_dividendos_do_fundo
+from b3_service import buscar_dividendos_do_fundo, buscar_dados_do_fundo, buscar_desdobramentos_do_fundo
 #AWS LAMBDA
 def lambda_handler(event, context):
     obtem_fundos()
@@ -29,9 +30,14 @@ def obtem_fundos():
     print(str(len(lista_fiis)) + ' fundo(s) encontrado(s)')
 
     for (indice, fii) in enumerate(lista_fiis):
-        print('Fundo ' + str(indice + 1) + ' de ' + str(len(lista_fiis)))
         symbol_el = fii.find("span", class_="symbol")
         symbol = symbol_el.text.strip()
+
+        #Quando quiser testar apenas um fundo especifico
+        if symbol != "CXRI11":
+            continue
+        
+        print('Fundo ' + str(indice + 1) + ' de ' + str(len(lista_fiis)))
         try:
             if symbol_el:
                 razao_social = fii.find("span", class_="name").text.strip()
@@ -45,9 +51,9 @@ def obtem_fundos():
                 detalhe_fundo(fundo)
 
 
-                #print(fundo.toJson())
+                print(fundo.toJson())
                 
-                enviar_webservice(fundo.toJson())
+                #enviar_webservice(fundo.toJson())
                 
                 #break
         except Exception as e:
@@ -94,7 +100,12 @@ def detalhe_fundo(fundo):
 
     #Realiza leitura dos documentos do fundo
     lista_doc = ler_documentos(cnpj_fundo)
-    lista_dividendos = ler_dividendos(cnpj_fundo, fundo.symbol[:4])
+
+    #Eventos do fundo
+    dadosB3 = DadosB3(ler_eventos(cnpj_fundo, fundo.symbol[:4]))
+    dadosB3.lista_dividendos = ler_dividendos(dadosB3.dados)
+    dadosB3.lista_desdobramentos = ler_desdobramentos(dadosB3.dados)
+    
 
     #print(lista_dividendos)
     detalhe = Detalhe(liquidez_diaria,
@@ -104,15 +115,22 @@ def detalhe_fundo(fundo):
                       valor_patrimonal,
                       rentabilidade_mes,
                       lista_doc,
-                      lista_dividendos)
+                      dadosB3.lista_dividendos,
+                      dadosB3.lista_desdobramentos)
     
     fundo.detalhe = detalhe
 
 def ler_documentos(cnpj):
     return buscar_documentos_do_fundo(cnpj)
 
-def ler_dividendos(cnpj, symbol):
-    return buscar_dividendos_do_fundo(cnpj, symbol)
+def ler_eventos(cnpj, symbol):
+    return buscar_dados_do_fundo(cnpj, symbol)
+
+def ler_dividendos(dados):
+    return buscar_dividendos_do_fundo(dados)
+
+def ler_desdobramentos(dados):
+    return buscar_desdobramentos_do_fundo(dados)
 
 
 def enviar_webservice(dados):
