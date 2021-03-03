@@ -15,7 +15,7 @@ DIVIDEND_URL = "/fundsProxy/fundsCall/GetListedSupplementFunds"
 #data_atual_request = now.strftime("%Y-%m-%d")
 #print(data_atual)
 
-def buscar_documentos_do_fundo(cnpj):
+def deprecated_buscar_documentos_do_fundo(cnpj):
     #Parametro que será convertido em Base64 para o request
     #TODO: Utilizar datas (mês anterior e data atual)
     documentos_fundo_param = {"pageNumber":1,"pageSize":10,"cnpj":cnpj,"dateInitial":"2020-09-18","dateFinal":"2020-11-17","category": None}
@@ -43,6 +43,8 @@ def buscar_documentos_do_fundo(cnpj):
     return lista
 
 def buscar_dados_do_fundo(cnpj, symbol):
+    #Parametro que será convertido em Base64 para o request
+    #TODO: Utilizar datas (mês anterior e data atual)
     parametro = {"cnpj":cnpj,"identifierFund":symbol,"typeFund":7}
     parametro_base64 = base64.b64encode(json.dumps(parametro, separators=(',', ':')).encode('utf8'))
 
@@ -51,7 +53,7 @@ def buscar_dados_do_fundo(cnpj, symbol):
     print('Obtendo eventos da URL: ' + url_request)
     result = http_get(url_request)
     if result.status_code != 200:
-            raise Exception('status_code inesperado ao obter dividendos: {}'.format(result.status_code))
+            raise Exception('status_code inesperado ao obter eventos do fundo: {}'.format(result.status_code))
 
     if not result.text:
         return []
@@ -76,8 +78,8 @@ def buscar_desdobramentos_do_fundo(dados):
     #resultado['cashDividends'].sort(key=lambda x: converter_data(x['paymentDate']))
     return [
                 {
-                    'data_aprovacao' : converter_data(doc['approvedOn']),
-                    'data_inicio' : converter_data(doc['lastDatePrior']),
+                    'data_deliberacao' : converter_data(doc['approvedOn']),
+                    'data_negocios_ate' : converter_data(doc['lastDatePrior']),
                     'fator' : f'{float(doc["factor"].replace(".", "").replace(",", ".")):.2f}',
                 } for doc in dados['stockDividends'] if doc['label'] == 'DESDOBRAMENTO'
             ]

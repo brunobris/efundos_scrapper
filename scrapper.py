@@ -3,7 +3,7 @@ from fundo import Fundo
 from detalhe import Detalhe
 from bs4 import BeautifulSoup
 from models.dados_b3 import DadosB3
-import re
+import re, random
 #from b3_service import buscar_documentos_do_fundo
 from fnet_service import buscar_documentos_do_fundo
 from b3_service import buscar_dividendos_do_fundo, buscar_dados_do_fundo, buscar_desdobramentos_do_fundo
@@ -29,6 +29,8 @@ def obtem_fundos():
     lista_fiis = soup.find_all("div", class_="item")
     print(str(len(lista_fiis)) + ' fundo(s) encontrado(s)')
 
+    #Randomiza lista
+    random.shuffle(lista_fiis)
     for (indice, fii) in enumerate(lista_fiis):
         symbol_el = fii.find("span", class_="symbol")
         symbol = symbol_el.text.strip()
