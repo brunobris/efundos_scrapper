@@ -63,7 +63,7 @@ def buscar_dados_do_fundo(cnpj, symbol):
 def buscar_dividendos_do_fundo(dados): 
     #Filtra apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
     #TODO: Inverter ordem? Talvez apenas para carga inicial
-    #resultado['cashDividends'].sort(key=lambda x: converter_data(x['paymentDate']))
+    dados['cashDividends'].sort(key=lambda x: converter_data(x['paymentDate']))
     return [
                 {
                     'data_base' : converter_data(doc['lastDatePrior']),
@@ -72,10 +72,9 @@ def buscar_dividendos_do_fundo(dados):
                 } for doc in dados['cashDividends'] if 'CTF' in doc['isinCode'][6:] and doc['label'] == 'RENDIMENTO'
             ]
 
-def buscar_desdobramentos_do_fundo(dados): 
-    #Filtra apenas CTF (COTA FUNDO) no isinCode, ex BRCPTSCTF004
+def buscar_desdobramentos_do_fundo(dados):
     #TODO: Inverter ordem? Talvez apenas para carga inicial
-    #resultado['cashDividends'].sort(key=lambda x: converter_data(x['paymentDate']))
+    #resultado['approvedOn'].sort(key=lambda x: converter_data(x['paymentDate']))
     return [
                 {
                     'data_deliberacao' : converter_data(doc['approvedOn']),

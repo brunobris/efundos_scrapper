@@ -19,8 +19,7 @@ def buscar_documentos_do_fundo(cnpj):
         raise Exception('status_code inesperado ao obter documentos: {}'.format(result.status_code))
 
     resultado = json.loads(result.text)
-    #TODO: Inverter ordem?
-    #TODO: Guardar desdobramentos talvez? ver exemplo CXRI em stockDividends em 09/09/2020
+    resultado['data'].sort(key=lambda x: x['id'])
     return [
                 {
                     'nome' : doc['categoriaDocumento'] + ' - ' + doc['dataReferencia'],
