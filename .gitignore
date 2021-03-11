@@ -5,3 +5,4 @@ flask-virtualenv/
 .vscode/
 *.log
 package.zip
+venv/
